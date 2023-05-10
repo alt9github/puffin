@@ -167,7 +167,6 @@ impl PuffinServerImpl {
         if self.clients.is_empty() {
             return Ok(());
         }
-        puffin::profile_function!();
 
         let mut packet = vec![];
 
