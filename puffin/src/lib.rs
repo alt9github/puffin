@@ -118,17 +118,28 @@ use std::sync::{
 };
 
 static MACROS_ON: AtomicBool = AtomicBool::new(false);
+static MACROS_ON_SCOPE: AtomicBool = AtomicBool::new(false);
 
 /// Turn on/off the profiler macros ([`profile_function`], [`profile_scope`] etc).
 /// When off, these calls take only 1-2 ns to call (100x faster).
 /// This is [`false`] by default.
 pub fn set_scopes_on(on: bool) {
+    MACROS_ON_SCOPE.store(on, Ordering::Relaxed);
+    if on {
+        set_function_on(on);
+    }
+}
+
+pub fn set_function_on(on: bool) {
     MACROS_ON.store(on, Ordering::Relaxed);
 }
 
 /// Are the profiler scope macros turned on?
 /// This is [`false`] by default.
 pub fn are_scopes_on() -> bool {
+    MACROS_ON_SCOPE.load(Ordering::Relaxed)
+}
+pub fn are_function_on() -> bool {
     MACROS_ON.load(Ordering::Relaxed)
 }
 
@@ -817,7 +828,7 @@ macro_rules! profile_function {
         $crate::profile_function!("");
     };
     ($data:expr) => {
-        let _profiler_scope = if $crate::are_scopes_on() {
+        let _profiler_function = if $crate::are_function_on() {
             static mut _FUNCTION_NAME: &'static str = "";
             static mut _LOCATION: &'static str = "";
             static _INITITIALIZED: ::std::sync::Once = ::std::sync::Once::new();
